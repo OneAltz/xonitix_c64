@@ -2,14 +2,16 @@
 
 A Halloween upgrade to [Xonitix56](https://github.com/OneAltz/Xonitix56) with a new 2D arena and periodic ghosts. The original terminal game was made by Breno G. de Oliveira in 2018. Original source is MIT licensed; attribution and license are preserved in `LICENSE`.
 
-## Trick: Ghost Mode + surprise ASCII ghost
+## Trick: Ghost Mode + rotating Halloween ASCII art
 
 - Approximately **20 seconds** after a level starts, one enemy becomes a ghost (`G`) for **5 seconds**.
 - A ghost can pass through captured interior walls and harm the player even in safe territory. It cannot leave the arena's outer boundary.
 - When a ghost activates, an ASCII ghost pops up on the right side of the board for **2 seconds** with a `GHOST UNLEASHED!` warning. **The game never pauses** for the display.
-- An extra harmless ASCII ghost occasionally appears between attacks with a `DID YOU SEE THAT?` caption. This is only a visual surprise. The visual appears after a randomized 10 to 17 seconds, initially 9.5 to 14.9 seconds.
+- Five harmless Halloween characters appear randomly between attacks: a **spider**, **bat**, **jack-o-lantern**, **skull**, or **black cat**. Each has its own ASCII drawing and caption.
+- The extra artwork appears for **1.2 seconds**. By default it returns at randomized 10 to 17 second intervals, with the first appearing after approximately 9.5 to 14.9 seconds. You can override the interval with `--ascii-interval N` (whole seconds).
+- The **original ghost ASCII art** is kept exclusively for actual ghost attacks. These other characters are visual only, not extra enemies. The art never blocks gameplay or hides the arena.
 - The timer resets each level. Ghosts return to ordinary enemies at the end of their attack, moving to the nearest open cell if they happen to be inside claimed territory.
-- `--no-ghost` disables ghost mechanics, and `--no-ascii` disables both kinds of ASCII animation.
+- `--no-ghost` disables ghost mechanics without disabling ambient Halloween art; `--no-ascii` disables all the artwork but keeps ghost gameplay enabled.
 
 ## Treat: Multi-line territory capture
 
@@ -151,7 +153,7 @@ gcc -std=c11 -O2 -Wall -Wextra -Wpedantic tests/test_game.c game.c -o test-game.
 - **`gcc: command not found`**: Open **MSYS2 UCRT64**, not a regular PowerShell prompt, for the installation and compilation steps.
 - **`main.c: No such file or directory`**: You are in the wrong folder. Change into the directory containing `main.c`, `arena.c`, and `terminal.c`.
 - **`Unable to start game. Use an interactive terminal.`**: Launch the compiled executable in **Windows Terminal / PowerShell** instead of the MSYS2 MinTTY window, a redirected shell, or an editor's output pane.
-- **Board or ghost art will not fit**: Maximize the terminal, reduce its font size, or try `-l 40 -r 12`. The ASCII ghost occupies extra columns to the right of the arena.
+- **Board or Halloween art will not fit**: Maximize the terminal, reduce its font size, or try `-l 40 -r 12`. The ASCII ghost occupies extra columns to the right of the arena.
 - **PowerShell cannot find `xonitix.exe`**: Confirm that the executable was compiled in this folder and run it as `.\xonitix.exe`.
 
 **Windows verification status:** Windows-specific input and console handling are implemented in `terminal.c`, but this edition has not been runtime-tested on Windows. Linux compilation and game-engine tests have passed. Windows testing and bug reports are welcome.
@@ -176,6 +178,7 @@ Direction continues until changed or stopped. You are safe while travelling insi
 ./xonitix -l 40 -r 14                 # Custom board width and height
 ./xonitix --ghost-interval 3          # Demo: first ghost after 3 seconds
 ./xonitix --ghost-duration 10         # Ghost stays active for 10 seconds
+./xonitix --ascii-interval 3           # Random Halloween art every 3 seconds
 ./xonitix --no-ascii                  # No ASCII artwork
 ./xonitix --no-ghost                  # No ghost gameplay mechanic
 ./xonitix -s                          # Clear board when exiting
@@ -183,7 +186,35 @@ Direction continues until changed or stopped. You are safe while travelling insi
 ./xonitix-classic                     # Original single-line C port
 ```
 
-The art appears to the right of the arena so it never obscures the game. Give your terminal enough width: at least **24 extra columns** beyond your requested board width. The arena needs 3 rows beyond its height for its status and legend.
+The art appears to the right of the arena so it never obscures the game. A quick Halloween-art demo with gameplay Ghost Mode disabled is:
+
+```sh
+./xonitix -l 40 -r 12 --no-ghost --ascii-interval 2
+```
+
+The warning ghost still appears during actual Ghost Mode attacks when ghosts are enabled. If you want both visual surprises and ghosts during your demo:
+
+```sh
+./xonitix -l 40 -r 12 --ghost-interval 4 --ghost-duration 3 --ascii-interval 2
+```
+
+ Give your terminal enough width: at least **24 extra columns** beyond your requested board width. The arena needs 3 rows beyond its height for its status and legend.
+
+## Complete command-line reference
+
+| Argument | Meaning | Allowed values |
+| --- | --- | --- |
+| `-l N` | Width of the 2D board | 12 through 120 columns |
+| `-r N` | Height of the 2D board | 8 through 45 rows |
+| `--ghost-interval N` | Time between ghost attacks | 1 through 300 seconds; default 20 |
+| `--ghost-duration N` | How long ghost attacks last | 1 through 300 seconds; default 5 |
+| `--ascii-interval N` | Fixed time between random Halloween artwork | 1 through 300 seconds; defaults to random 10 through 17 |
+| `--no-ghost` | Turn off ghost attacks | Flag, no value |
+| `--no-ascii` | Hide decorative art and ghost warnings | Flag, no value |
+| `-s` | Clear the terminal on exit | Flag, no value |
+| `-h`, `--help` | Display game help | Flag, no value |
+
+**The classic executable has different options.** Use `./xonitix-classic -h`. Classic supports `-l N` (line length 2 through 4096), `-q` (quiet start), `-s` (stealth exit), and `-h` / `--help`. Classic controls: Left and Right to move, Down to stop, Space to claim, Q to quit.
 
 ## Files
 
@@ -197,13 +228,13 @@ The art appears to the right of the arena so it never obscures the game. Give yo
 
 ## Verification
 
-Both games compile with `-std=c11 -Wall -Wextra -Wpedantic -Werror`. The 2D engine's tests cover horizontal boost including intermediate collisions and captures, flood fill, territory capture, wall phasing, ghost activation and timeout, trail collisions, fatal ghost contact, and option behavior. An actual Linux pseudo-terminal smoke test confirmed that timed ghost activation and ASCII warnings appear while rendering continues and the quit key works.
+Both games compile with `-std=c11 -Wall -Wextra -Wpedantic -Werror`. The 2D engine's tests cover horizontal boost including intermediate collisions and captures, flood fill, territory capture, wall phasing, ghost activation and timeout, timed ASCII-art selection, configurable ambient intervals, trail collisions, fatal ghost contact, and option behavior. An actual Linux pseudo-terminal smoke test confirmed that timed ghost activation and ASCII warnings appear while rendering continues and the quit key works.
 
 ## Hacktoberfest contribution guidance
 
 **Treat:** 2D territory-capture game using arrays and flood fill, plus toggleable horizontal speed boost.
 
-**Trick:** Periodic wall-phasing ghost, with two kinds of nonblocking ASCII surprise popups.
+**Trick:** Periodic wall-phasing ghost, with a nonblocking warning and five kinds of randomized decorative ASCII popups.
 
 If submitting a pull request to an upstream GitHub project, check its contribution policy and scope first. The feature code is contained in `arena.c`, `arena.h`, and `main.c`, making it practical to review the gameplay changes separately from the preserved classic mode.
 

@@ -9,6 +9,10 @@
 #define TICKS_PER_GHOST_WARNING 20  /* 2 seconds of ASCII art */
 #define TICKS_PER_AMBIENT_SCARE 12  /* 1.2 seconds of ASCII art */
 
+static int next_ambient_cooldown(const Arena *a) {
+    return a->ambient_interval > 0 ? a->ambient_interval : 100 + rand() % 70;
+}
+
 static int index_of(const Arena *a, int x, int y) {
     return y * a->width + x;
 }
@@ -46,7 +50,8 @@ bool arena_init(Arena *a, int width, int height) {
     a->ghost_interval = 200; /* 20 seconds before first ghost, then between ghosts */
     a->ghost_duration = 50;  /* 5 seconds */
     a->ghost_cooldown = a->ghost_interval;
-    a->ambient_cooldown = 95 + rand() % 55;
+    a->ambient_cooldown = 95 + rand() % 55; /* First ambient appearance */
+    a->scare_art = ART_GHOST;
     a->ascii_enabled = true;
     a->ghosts_enabled = true;
     return true;
@@ -88,7 +93,9 @@ bool arena_next_level(Arena *a) {
     a->ghost_enemy = -1;
     a->ghost_remaining = 0;
     a->ghost_cooldown = a->ghost_interval;
-    a->ambient_cooldown = 95 + rand() % 55;
+    a->ambient_cooldown = a->ambient_interval > 0
+                          ? a->ambient_interval : 95 + rand() % 55;
+    a->scare_art = ART_GHOST;
     a->scare_remaining = 0;
     a->scare_is_warning = false;
     a->player_x = a->width / 2;
@@ -200,10 +207,13 @@ static void ghost_timers(Arena *a) {
     if (a->scare_remaining > 0) --a->scare_remaining;
     if (a->ambient_cooldown > 0) --a->ambient_cooldown;
     if (a->ambient_cooldown == 0) {
-        a->ambient_cooldown = 100 + rand() % 70; /* approximately 10-17s */
+        a->ambient_cooldown = next_ambient_cooldown(a);
         if (a->ascii_enabled && a->ghost_remaining == 0) {
             a->scare_remaining = TICKS_PER_AMBIENT_SCARE;
             a->scare_is_warning = false;
+            /* Rotate through the other Halloween creatures; ghost art is
+             * intentionally reserved for real danger warnings. */
+            a->scare_art = (HalloweenArt)(ART_SPIDER + rand() % (ART_COUNT - ART_SPIDER));
         }
     }
     if (!a->ghosts_enabled) return;
@@ -222,6 +232,7 @@ static void ghost_timers(Arena *a) {
             if (a->ascii_enabled) {
                 a->scare_remaining = TICKS_PER_GHOST_WARNING;
                 a->scare_is_warning = true;
+                a->scare_art = ART_GHOST;
             }
         }
     }

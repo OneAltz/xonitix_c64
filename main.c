@@ -39,7 +39,7 @@ static void usage(const char *program) {
     puts("2D Trick or Treat Xonitix (C11; no third-party libraries).\n"
          "Capture territory by tracing a path from claimed ground and returning.\n"
          "Ghosts temporarily ignore walls. Ghost ASCII appears as a warning\n"
-         "and occasionally as a harmless, ambient Halloween surprise.\n\n"
+         "and occasionally as harmless spiders, bats, pumpkins, skulls and cats.\n\n"
          "Move: Arrow keys or WASD    Stop: X    B: horizontal 2x boost\n"
          "Start a capture: Space (while on #)    Quit: Q\n"
          "Claim more than 50% of the interior to level up.\n\n"
@@ -48,6 +48,7 @@ static void usage(const char *program) {
          "  -r N                  Board height (8..45)\n"
          "  --ghost-interval N    Seconds between ghost events (1..300, default 20)\n"
          "  --ghost-duration N    Ghost duration in seconds (1..300, default 5)\n"
+         "  --ascii-interval N    Show random Halloween art every N seconds (1..300)\n"
          "  --no-ghost            Disable ghost events\n"
          "  --no-ascii            Disable ASCII jumpscares and warnings\n"
          "  -s                    Clear board on exit (stealth)\n"
@@ -56,14 +57,62 @@ static void usage(const char *program) {
 }
 
 /* The art never blocks play. It stays in a side panel, not over the board. */
-static const char *ghost_art[] = {
-    "    .-.       ",
-    "   (o o)      ",
-    "   | O |      ",
-    "   |   |      ",
-    "   '~~~'      ",
-    "   B O O !    ",
-    "              "
+typedef struct {
+    const char *lines[6];
+    const char *caption;
+} ArtPanel;
+
+/* Six-line designs fit beside even the minimum-height board. All characters
+ * are ASCII and every row is small enough for the existing 24-column panel. */
+static const ArtPanel halloween_art[ART_COUNT] = {
+    [ART_GHOST] = {{
+        "      .-.       ",
+        "     (o o)      ",
+        "     | O |      ",
+        "     |   |      ",
+        "     '~~~'      ",
+        "      B O O     "
+    }, "GHOST UNLEASHED!"},
+    [ART_SPIDER] = {{
+        "  \\   /\\   /  ",
+        "   \\ /  \\ /   ",
+        "   (  o  o  )  ",
+        "   /  /\\  \\   ",
+        "  /__/ || \\__ ",
+        "      /  \\      "
+    }, "SPIDER SENSE!"},
+    [ART_BAT] = {{
+        "    /\\    /\\    ",
+        "   /  \\__/  \\   ",
+        "  /  (o  o)  \\  ",
+        "  \\    \\/    /  ",
+        "   \\  /  \\  /   ",
+        "    \\/    \\/    "
+    }, "BAT INCOMING!"},
+    [ART_PUMPKIN] = {{
+        "      __        ",
+        "   .-'  '-.     ",
+        "  /  ^  ^  \\    ",
+        " |   \\__/   |   ",
+        "  \\  ____  /    ",
+        "   '------'     "
+    }, "PUMPKIN PARTY!"},
+    [ART_SKULL] = {{
+        "    .------.    ",
+        "   /  x  x  \\   ",
+        "  |    __    |  ",
+        "  |   (__)   |  ",
+        "   \\  ||||  /   ",
+        "    '------'    "
+    }, "SPOOKY SKULL!"},
+    [ART_CAT] = {{
+        "    /\\_/\\       ",
+        "   ( o.o )      ",
+        "    > ^ <       ",
+        "   /  _  \\      ",
+        "  (__/ \\__)     ",
+        "    M E O W     "
+    }, "BLACK CAT!"}
 };
 
 static char tile_symbol(const Arena *arena, int x, int y) {
@@ -106,10 +155,10 @@ static void render(const Arena *a, int columns) {
         }
         if (side_panel) {
             if (a->ascii_enabled && a->scare_remaining > 0) {
-                if (y < 6) printf("   %s", ghost_art[y]);
-                else if (y == 6) printf("   %s", a->scare_is_warning
-                                           ? "GHOST UNLEASHED!"
-                                           : "DID YOU SEE THAT?");
+                HalloweenArt art = a->scare_art;
+                if (art < ART_GHOST || art >= ART_COUNT) art = ART_GHOST;
+                if (y < 6) printf("   %s", halloween_art[art].lines[y]);
+                else if (y == 6) printf("   %s", halloween_art[art].caption);
             }
         }
         putchar('\n');
@@ -123,7 +172,7 @@ static void render(const Arena *a, int columns) {
 int main(int argc, char **argv) {
     int width = terminal_width() - 27;
     int height = terminal_height() - 5;
-    int ghost_interval = 20, ghost_duration = 5;
+    int ghost_interval = 20, ghost_duration = 5, ascii_interval = 0;
     bool stealth = false, no_ascii = false, no_ghost = false;
     int result = EXIT_SUCCESS;
     Arena arena;
@@ -157,6 +206,11 @@ int main(int argc, char **argv) {
                 fputs("Invalid --ghost-duration: use seconds 1..300.\n", stderr);
                 return EXIT_FAILURE;
             }
+        } else if (!strcmp(arg, "--ascii-interval")) {
+            if (++i == argc || !integer_option(argv[i], 1, 300, &ascii_interval)) {
+                fputs("Invalid --ascii-interval: use seconds 1..300.\n", stderr);
+                return EXIT_FAILURE;
+            }
         } else if (!strcmp(arg, "--no-ascii")) no_ascii = true;
         else if (!strcmp(arg, "--no-ghost")) no_ghost = true;
         else if (!strcmp(arg, "-s")) stealth = true;
@@ -181,6 +235,7 @@ int main(int argc, char **argv) {
         fputs("Unable to allocate the 2D board.\n", stderr);
         return EXIT_FAILURE;
     }
+    arena.ambient_interval = ascii_interval * 10;
     arena.ghost_interval = ghost_interval * 10;
     arena.ghost_duration = ghost_duration * 10;
     arena.ghosts_enabled = !no_ghost;

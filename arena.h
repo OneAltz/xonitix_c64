@@ -22,6 +22,17 @@ typedef struct {
     int dx, dy;
 } ArenaEnemy;
 
+/* The art is cosmetic. GHOST is reserved for real Ghost Mode warnings. */
+typedef enum {
+    ART_GHOST = 0,
+    ART_SPIDER,
+    ART_BAT,
+    ART_PUMPKIN,
+    ART_SKULL,
+    ART_CAT,
+    ART_COUNT
+} HalloweenArt;
+
 typedef struct {
     int width, height;
     int level;
@@ -47,6 +58,8 @@ typedef struct {
     int ghost_duration;
     int scare_remaining;       /* Nonblocking ASCII display */
     int ambient_cooldown;
+    int ambient_interval;    /* 0 = random 10 to 17 seconds; otherwise ticks */
+    HalloweenArt scare_art; /* What to render during this nonblocking popup */
     bool ascii_enabled;
     bool ghosts_enabled;
     bool scare_is_warning;
