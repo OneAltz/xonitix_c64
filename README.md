@@ -69,3 +69,72 @@ Run `make test`. Tests cover claiming and scoring, leveling, fatal shots, enemy 
 ## License
 
 Original game Copyright (c) 2018 Breno G. de Oliveira. MIT. See `LICENSE` for the required attribution and license text.
+
+
+
+
+## Windows 10/11 Installation
+
+Xonitix Trick or Treat Edition supports Windows using the C11 programming language. You will need a C compiler to build the game.
+
+### Step 1: Install GCC
+
+1. Download and install [MSYS2](https://www.msys2.org/).
+2. Open **MSYS2 UCRT64** from the Windows Start menu.
+3. Install GCC using:
+
+```bash
+pacman -S --needed mingw-w64-ucrt-x86_64-gcc
+```
+
+Verify the installation:
+
+```bash
+gcc --version
+```
+
+### Step 2: Download and compile the game
+
+Download and extract the repository, then navigate to the folder containing the source files.
+
+Compile the Halloween edition:
+
+```bash
+gcc -std=c11 -O2 -Wall -Wextra -Wpedantic main.c arena.c terminal.c -o xonitix.exe
+```
+
+This creates `xonitix.exe`.
+
+### Step 3: Launch the game
+
+Open Windows Terminal or PowerShell in the project directory and enter:
+
+```powershell
+.\xonitix.exe
+```
+
+To test the Halloween Ghost Mode:
+
+```powershell
+.\xonitix.exe --ghost-interval 3 --ghost-duration 5
+```
+
+### Step 4: Game controls
+
+| Key | Action |
+|---|---|
+| Arrow keys or WASD | Move |
+| Space | Begin capturing territory |
+| X | Stop moving |
+| Q | Quit |
+
+### Troubleshooting
+
+- **GCC not found:** Make sure GCC is installed and you are compiling from MSYS2 UCRT64.
+- **Missing source files:** Verify you are in the directory containing `main.c`, `arena.c`, and `terminal.c`.
+- **Terminal too small:** Try `.\xonitix.exe -l 40 -r 12`.
+- **Game fails to start:** Use Windows Terminal or PowerShell instead of the MSYS2 terminal window.
+
+**Note:** Windows support has been implemented but has not yet been tested on a Windows machine. Windows testing and bug reports are welcome.
+
+
