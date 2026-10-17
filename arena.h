@@ -33,6 +33,7 @@ typedef struct {
     int interior_total;
     int player_x, player_y;
     int move_x, move_y;
+    bool horizontal_boost;      /* B toggles 2x left/right speed. */
     bool drawing;
     bool trail_started;
     bool dead;
@@ -55,6 +56,7 @@ bool arena_init(Arena *arena, int width, int height);
 void arena_free(Arena *arena);
 bool arena_next_level(Arena *arena);
 void arena_set_direction(Arena *arena, int dx, int dy);
+void arena_toggle_horizontal_boost(Arena *arena);
 void arena_start_drawing(Arena *arena);
 void arena_tick(Arena *arena);
 bool arena_level_complete(const Arena *arena);

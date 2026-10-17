@@ -87,6 +87,7 @@ GameKey terminal_poll_key(void) {
     }
     if (k == ' ') return KEY_FIRE;
     if (k == 'x' || k == 'X') return KEY_STOP;
+    if (k == 'b' || k == 'B') return KEY_BOOST;
     if (k == 'w' || k == 'W') return KEY_UP;
     if (k == 'a' || k == 'A') return KEY_LEFT;
     if (k == 's' || k == 'S') return KEY_DOWN;
@@ -198,6 +199,7 @@ GameKey terminal_poll_key(void) {
         if (byte == 27) escape_state = 1;
         else if (byte == ' ') return KEY_FIRE;
         else if (byte == 'x' || byte == 'X') return KEY_STOP;
+        else if (byte == 'b' || byte == 'B') return KEY_BOOST;
         else if (byte == 'w' || byte == 'W') return KEY_UP;
         else if (byte == 'a' || byte == 'A') return KEY_LEFT;
         else if (byte == 's' || byte == 'S') return KEY_DOWN;

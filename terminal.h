@@ -11,6 +11,7 @@ typedef enum {
     KEY_DOWN,
     KEY_FIRE,
     KEY_STOP,
+    KEY_BOOST,
     KEY_QUIT
 } GameKey;
 

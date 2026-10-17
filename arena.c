@@ -118,6 +118,11 @@ void arena_set_direction(Arena *a, int dx, int dy) {
     }
 }
 
+/* Toggle double-speed horizontal travel. The setting persists between levels. */
+void arena_toggle_horizontal_boost(Arena *a) {
+    if (a && !a->dead) a->horizontal_boost = !a->horizontal_boost;
+}
+
 void arena_start_drawing(Arena *a) {
     if (a && !a->dead && !a->drawing &&
         arena_tile(a, a->player_x, a->player_y) == TILE_CLAIMED) {
@@ -257,33 +262,39 @@ static void move_enemy(Arena *a, int n) {
 
 static void move_player(Arena *a) {
     if (a->move_x == 0 && a->move_y == 0) return;
-    int nx = a->player_x + a->move_x;
-    int ny = a->player_y + a->move_y;
-    if (!inside(a, nx, ny)) return;
-    Tile destination = arena_tile(a, nx, ny);
-    if (destination == TILE_EMPTY && !a->drawing) return;
-    if (destination == TILE_TRAIL) {
-        a->dead = true;
-        return;
-    }
-    /* Crossing an enemy is fatal, even before its movement phase. */
-    for (int n = 0; n < a->enemy_count; ++n) {
-        if (a->enemies[n].x == nx && a->enemies[n].y == ny &&
-            (a->ghost_enemy == n || destination != TILE_CLAIMED)) {
+    /* A boosted horizontal tick crosses two cells, but must check and claim
+     * EACH tile separately. Never teleport past an enemy, trail, or wall. */
+    const int steps = (a->horizontal_boost && a->move_x != 0) ? 2 : 1;
+    for (int step = 0; step < steps; ++step) {
+        int nx = a->player_x + a->move_x;
+        int ny = a->player_y + a->move_y;
+        if (!inside(a, nx, ny)) return;
+        Tile destination = arena_tile(a, nx, ny);
+        if (destination == TILE_EMPTY && !a->drawing) return;
+        if (destination == TILE_TRAIL) {
             a->dead = true;
             return;
         }
-    }
-    a->player_x = nx;
-    a->player_y = ny;
-    if (a->drawing) {
-        if (destination == TILE_EMPTY) {
-            set_tile(a, nx, ny, TILE_TRAIL);
-            a->trail_started = true;
-        } else if (destination == TILE_CLAIMED && a->trail_started) {
-            complete_capture(a);
-            a->drawing = false;
-            a->trail_started = false;
+        /* Check intermediate tiles, even at double speed. */
+        for (int n = 0; n < a->enemy_count; ++n) {
+            if (a->enemies[n].x == nx && a->enemies[n].y == ny &&
+                (a->ghost_enemy == n || destination != TILE_CLAIMED)) {
+                a->dead = true;
+                return;
+            }
+        }
+        a->player_x = nx;
+        a->player_y = ny;
+        if (a->drawing) {
+            if (destination == TILE_EMPTY) {
+                set_tile(a, nx, ny, TILE_TRAIL);
+                a->trail_started = true;
+            } else if (destination == TILE_CLAIMED && a->trail_started) {
+                complete_capture(a);
+                a->drawing = false;
+                a->trail_started = false;
+                return; /* Stop on the boundary that completed the claim. */
+            }
         }
     }
 }
