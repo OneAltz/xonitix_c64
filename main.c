@@ -45,7 +45,7 @@ static void usage(const char *program) {
          "Claim more than 50% of the interior to level up.\n\n"
          "Options:\n"
          "  -l N                  Board width (12..120)\n"
-         "  -r N                  Board height (8..45)\n"
+         "  -h N                  Board height (8..45)\n"
          "  --ghost-interval N    Seconds between ghost events (1..300, default 20)\n"
          "  --ghost-duration N    Ghost duration in seconds (1..300, default 5)\n"
          "  --ascii-interval N    Show random Halloween art every N seconds (1..300)\n"
@@ -190,10 +190,10 @@ int main(int argc, char **argv) {
                 fputs("Invalid -l: expected width between 12 and 120.\n", stderr);
                 return EXIT_FAILURE;
             }
-        } else if (!strcmp(arg, "-r")) {
+        } else if (!strcmp(arg, "-h")) {
             if (++i == argc || !integer_option(argv[i], ARENA_MIN_HEIGHT,
                                                  ARENA_MAX_HEIGHT, &height)) {
-                fputs("Invalid -r: expected height between 8 and 45.\n", stderr);
+                fputs("Invalid -h: expected height between 8 and 45.\n", stderr);
                 return EXIT_FAILURE;
             }
         } else if (!strcmp(arg, "--ghost-interval")) {
@@ -222,12 +222,12 @@ int main(int argc, char **argv) {
 
     if (width < ARENA_MIN_WIDTH || height < ARENA_MIN_HEIGHT ||
         width > ARENA_MAX_WIDTH || height > ARENA_MAX_HEIGHT) {
-        fputs("Terminal is too small. Resize it or use -l 40 -r 12.\n", stderr);
+        fputs("Terminal is too small. Resize it or use -l 40 -h 12.\n", stderr);
         return EXIT_FAILURE;
     }
     if (width > terminal_width() - (no_ascii ? 0 : 24) ||
         height + 3 > terminal_height()) {
-        fputs("Board or ghost art will not fit. Resize terminal or use smaller -l/-r.\n", stderr);
+        fputs("Board or ghost art will not fit. Resize terminal or use smaller -l/-h.\n", stderr);
         return EXIT_FAILURE;
     }
     srand((unsigned)time(NULL));
