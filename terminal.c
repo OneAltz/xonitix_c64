@@ -15,6 +15,8 @@ static HANDLE output_handle;
 static CONSOLE_CURSOR_INFO saved_cursor;
 static bool saved_cursor_valid;
 static bool started;
+static DWORD previous_mode;
+static bool previous_mode_valid;
 
 bool terminal_start(void) {
     output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -28,6 +30,17 @@ bool terminal_start(void) {
     if (!SetConsoleCursorInfo(output_handle, &hidden)) {
         return false;
     }
+    if (GetConsoleMode(output_handle, &previous_mode)) {
+        previous_mode_valid = true;
+        if (!SetConsoleMode(output_handle,
+                            previous_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
+            SetConsoleCursorInfo(output_handle, &saved_cursor);
+            return false;
+        }
+    } else {
+        SetConsoleCursorInfo(output_handle, &saved_cursor);
+        return false;
+    }
     started = true;
     return true;
 }
@@ -36,6 +49,7 @@ void terminal_stop(void) {
     if (started && saved_cursor_valid) {
         SetConsoleCursorInfo(output_handle, &saved_cursor);
     }
+    if (started && previous_mode_valid) SetConsoleMode(output_handle, previous_mode);
     started = false;
 }
 
@@ -45,6 +59,14 @@ int terminal_width(void) {
         return info.srWindow.Right - info.srWindow.Left + 1;
     }
     return 80;
+}
+
+int terminal_height(void) {
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info)) {
+        return info.srWindow.Bottom - info.srWindow.Top + 1;
+    }
+    return 24;
 }
 
 GameKey terminal_poll_key(void) {
@@ -57,12 +79,18 @@ GameKey terminal_poll_key(void) {
             return KEY_NONE;
         }
         k = _getch();
+        if (k == 72) return KEY_UP;
         if (k == 75) return KEY_LEFT;
         if (k == 77) return KEY_RIGHT;
         if (k == 80) return KEY_DOWN;
         return KEY_NONE;
     }
     if (k == ' ') return KEY_FIRE;
+    if (k == 'x' || k == 'X') return KEY_STOP;
+    if (k == 'w' || k == 'W') return KEY_UP;
+    if (k == 'a' || k == 'A') return KEY_LEFT;
+    if (k == 's' || k == 'S') return KEY_DOWN;
+    if (k == 'd' || k == 'D') return KEY_RIGHT;
     if (k == 'q' || k == 'Q') return KEY_QUIT;
     return KEY_NONE;
 }
@@ -132,38 +160,50 @@ int terminal_width(void) {
     return 80;
 }
 
+int terminal_height(void) {
+    struct winsize size;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &size) == 0 && size.ws_row > 0) {
+        return size.ws_row;
+    }
+    return 24;
+}
+
 /* Consume all pending bytes. Escape sequences are handled across polls,
  * without waiting on a blocking read for the remaining arrow-key bytes. */
 GameKey terminal_poll_key(void) {
-    GameKey result = KEY_NONE;
+    /* Return one complete key per poll. Do not discard Space when the player
+     * presses Space+direction in quick succession. Escape sequences remain
+     * stateful across reads, without introducing a blocking wait. */
     for (;;) {
         fd_set inputs;
         struct timeval timeout = {0, 0};
         unsigned char byte;
         FD_ZERO(&inputs);
         FD_SET(STDIN_FILENO, &inputs);
-        if (select(STDIN_FILENO + 1, &inputs, NULL, NULL, &timeout) <= 0) break;
-        if (read(STDIN_FILENO, &byte, 1) != 1) break;
+        if (select(STDIN_FILENO + 1, &inputs, NULL, NULL, &timeout) <= 0)
+            return KEY_NONE;
+        if (read(STDIN_FILENO, &byte, 1) != 1) return KEY_NONE;
         if (escape_state == 1) {
             escape_state = (byte == '[' || byte == 'O') ? 2 : 0;
             continue;
         }
         if (escape_state == 2) {
             escape_state = 0;
-            if (byte == 'D') result = KEY_LEFT;
-            if (byte == 'C') result = KEY_RIGHT;
-            if (byte == 'B') result = KEY_DOWN;
+            if (byte == 'D') return KEY_LEFT;
+            if (byte == 'C') return KEY_RIGHT;
+            if (byte == 'B') return KEY_DOWN;
+            if (byte == 'A') return KEY_UP;
             continue;
         }
-        if (byte == 27) {
-            escape_state = 1;
-        } else if (byte == ' ') {
-            result = KEY_FIRE;
-        } else if (byte == 'q' || byte == 'Q') {
-            return KEY_QUIT;
-        }
+        if (byte == 27) escape_state = 1;
+        else if (byte == ' ') return KEY_FIRE;
+        else if (byte == 'x' || byte == 'X') return KEY_STOP;
+        else if (byte == 'w' || byte == 'W') return KEY_UP;
+        else if (byte == 'a' || byte == 'A') return KEY_LEFT;
+        else if (byte == 's' || byte == 'S') return KEY_DOWN;
+        else if (byte == 'd' || byte == 'D') return KEY_RIGHT;
+        else if (byte == 'q' || byte == 'Q') return KEY_QUIT;
     }
-    return result;
 }
 
 void terminal_sleep_ms(unsigned int milliseconds) {
