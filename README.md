@@ -1,30 +1,30 @@
-# Xonitix: Trick or Treat Edition (Pure C11)
+# Xonitix: Trick or Treat Edition (C11)
 
-A Halloween upgrade to [Xonitix56](https://github.com/OneAltz/Xonitix56) with a new 2D arena and periodic ghosts. The original terminal game was made by Breno G. de Oliveira in 2018. Original source is MIT licensed; attribution and license are preserved in `LICENSE`.
+A Halloween-themed, two-dimensional terminal game built in **C11**, based on [Xonitix56](https://github.com/OneAltz/Xonitix56). Capture more than half the arena while dodging moving enemies and temporary wall-phasing ghosts.
 
-## Trick: Ghost Mode + rotating Halloween ASCII art
+This is the **Spooky ASCII edition** with a 2D arena, Ghost Mode, rotating Halloween art, and a horizontal speed boost. **It does not include the later Bugs Bunny meme feature.** The original one-line game is preserved as `xonitix-classic`.
 
-- Approximately **20 seconds** after a level starts, one enemy becomes a ghost (`G`) for **5 seconds**.
-- A ghost can pass through captured interior walls and harm the player even in safe territory. It cannot leave the arena's outer boundary.
-- When a ghost activates, an ASCII ghost pops up on the right side of the board for **2 seconds** with a `GHOST UNLEASHED!` warning. **The game never pauses** for the display.
-- Five harmless Halloween characters appear randomly between attacks: a **spider**, **bat**, **jack-o-lantern**, **skull**, or **black cat**. Each has its own ASCII drawing and caption.
-- The extra artwork appears for **1.2 seconds**. By default it returns at randomized 10 to 17 second intervals, with the first appearing after approximately 9.5 to 14.9 seconds. You can override the interval with `--ascii-interval N` (whole seconds).
-- The **original ghost ASCII art** is kept exclusively for actual ghost attacks. These other characters are visual only, not extra enemies. The art never blocks gameplay or hides the arena.
-- The timer resets each level. Ghosts return to ordinary enemies at the end of their attack, moving to the nearest open cell if they happen to be inside claimed territory.
-- `--no-ghost` disables ghost mechanics without disabling ambient Halloween art; `--no-ascii` disables all the artwork but keeps ghost gameplay enabled.
+The original Xonitix was created by Breno G. de Oliveira (2018) and released under the MIT License. See [LICENSE](LICENSE).
 
-## Treat: Multi-line territory capture
+## Features
 
-This version is no longer restricted to a single line. The new default `xonitix` is a **2D board**.
+**Treat: 2D territory capture**
 
-- Move in all four directions.
-- While standing on claimed territory (`#`), press **Space** to arm drawing.
-- Move through unclaimed territory, creating a visible trail (`+`). Rejoin claimed territory to complete the capture.
-- A flood-fill algorithm checks which empty regions contain enemies. Every enclosed, enemy-free region becomes claimed territory. Every newly claimed interior cell earns 100 points.
-- Crossing your own unfinished trail or allowing an enemy to touch it ends the game. Normal enemies cannot pass claimed walls. Ghosts ignore those walls during the timed event.
-- Claim **more than 50%** of interior tiles to advance to the next level. New levels add enemies, up to 12 simultaneous enemies.
+- Move in four directions and press **Space** while standing on captured territory (`#`) to start drawing.
+- Draw a trail (`+`) through empty territory and reconnect to captured territory to close it.
+- A flood-fill algorithm captures regions that contain no enemies. Each newly captured interior cell earns 100 points.
+- Capture **more than 50%** of interior tiles to advance. Each new level adds an enemy, up to 12.
+- Press **B** to toggle a **2x horizontal speed boost**. Intermediate tiles are checked for collisions even when boosting.
 
-**Legend**
+**Trick: Ghosts and Halloween surprises**
+
+- By default, after about 20 seconds in a level, one enemy becomes a ghost (`G`) for 5 seconds.
+- Ghosts can travel through claimed interior walls and end the game on contact with the player.
+- A ghost warning appears beside the board for 2 seconds when Ghost Mode activates.
+- Harmless ASCII popups randomly display a spider, bat, pumpkin, skull, or black cat for 1.2 seconds.
+- The ASCII artwork never pauses gameplay or covers the board. Use `--ascii-interval N` to set a fixed display interval.
+
+### Arena symbols
 
 ```text
 ####################################
@@ -37,110 +37,177 @@ This version is no longer restricted to a single line. The new default `xonitix`
 #                                  #
 ####################################
 
-@ player  # claimed wall  + active trail  . enemy  G ghost
+@ player   # claimed tile   + active trail   . enemy   G ghost
 ```
 
-## New feature: Horizontal speed boost
+## System requirements
 
-Press **B** to toggle a **2x speed boost for left/right movement** (Left/Right arrows or A/D). Press **B** again to return to normal speed. Up/down movement remains unchanged. The boost begins OFF and stays in the chosen state between levels.
+- A terminal with keyboard input and enough room for the arena plus the ASCII-art panel.
+- A compiler supporting **C11**. No third-party game, graphics, or image libraries are required.
+- Linux: GCC or Clang, and Make.
+- macOS: Apple Command Line Tools (Clang and Make).
+- Windows 10/11: MSYS2 UCRT64 GCC, plus Windows Terminal or PowerShell for playing.
 
-- Regular horizontal movement: **1 tile per simulation tick**.
-- Boosted horizontal movement: **2 tiles per simulation tick**.
-- Every crossed tile is still checked for enemies, trails, boundaries, and capture, so boosting cannot jump over hazards or miss claimed cells.
-- The status line displays `Horizontal boost: ON (B)` or `Horizontal boost: OFF (B)`.
+**Terminal size:** For the requested board size, allow at least **24 additional columns** for the Halloween art and **3 additional rows** for status information. For smaller terminal windows, start with `-l 40 -r 12`. The game normally chooses a size based on your terminal, capped at 62 columns by 20 rows.
 
-## Compiling (Fedora, Ubuntu, macOS, BSD)
+## Install and build
 
-```sh
+Download and extract the project ZIP, or clone the repository **after this C11 version has been committed to it**. Open a terminal **inside the folder containing `main.c`, `arena.c`, `terminal.c`, and `Makefile`** before running the build commands.
+
+### Fedora Linux
+
+Install the compiler and Make:
+
+```bash
+sudo dnf install gcc make
+```
+
+Build, test, and launch:
+
+```bash
+make clean
 make
 make test
 ./xonitix
 ```
 
-Without Make:
+### Ubuntu, Debian, Linux Mint, and Pop!_OS
 
-```sh
+```bash
+sudo apt update
+sudo apt install build-essential
+make clean
+make
+make test
+./xonitix
+```
+
+### Arch Linux and Manjaro
+
+```bash
+sudo pacman -S --needed base-devel
+make clean
+make
+make test
+./xonitix
+```
+
+### openSUSE
+
+```bash
+sudo zypper install gcc make
+make clean
+make
+make test
+./xonitix
+```
+
+### Alpine Linux
+
+```bash
+sudo apk add build-base
+make clean
+make
+make test
+./xonitix
+```
+
+### Other Linux distributions
+
+Install a **C11 compiler** (such as GCC or Clang) and **Make** using your distribution's package manager. Then, from the project directory:
+
+```bash
+make clean
+make
+make test
+./xonitix
+```
+
+If Make is unavailable, compile the 2D version directly:
+
+```bash
 gcc -std=c11 -O2 -Wall -Wextra -Wpedantic main.c arena.c terminal.c -o xonitix
 ./xonitix
 ```
 
-To install GCC and Make if necessary on Fedora:
+### macOS (Intel and Apple silicon)
 
-```sh
-sudo dnf install gcc make
-```
+1. Open **Terminal**.
+2. Install Apple's developer command-line tools if needed:
 
-## Windows 10/11 (C11)
+   ```bash
+   xcode-select --install
+   ```
 
-The recommended Windows compiler is **GCC using MSYS2 UCRT64**. You do not need C++ or a separate game library. The game uses the built-in Windows console API, so play it in **Windows Terminal** or **PowerShell**.
+3. Once the installation completes, verify the compiler and build tools:
 
-### 1. Install the compiler
+   ```bash
+   clang --version
+   make --version
+   ```
 
-1. Download and install [MSYS2](https://www.msys2.org/).
-2. Open **MSYS2 UCRT64** from the Start menu, not the plain MSYS2 shell.
-3. Update MSYS2, following any instructions to close and reopen the shell:
+4. Change to the extracted project directory, then build and play:
 
-```sh
-pacman -Syu
-```
+   ```bash
+   make clean
+   make
+   make test
+   ./xonitix
+   ```
 
-4. Install GCC:
+You do **not** need the full Xcode application or Homebrew for this build. The included Makefile uses the system C compiler, which is typically Clang on macOS.
 
-```sh
-pacman -S --needed mingw-w64-ucrt-x86_64-gcc
-gcc --version
-```
+### Windows 10/11 (MSYS2 UCRT64 GCC)
 
-### 2. Compile Xonitix
+**Install the compiler:**
 
-Download and extract the source ZIP or clone the GitHub repository. In the **MSYS2 UCRT64** shell, change to the folder containing `main.c`, `arena.c`, and `terminal.c`. For example, if the folder was extracted into Downloads:
+1. Install [MSYS2](https://www.msys2.org/).
+2. Launch **MSYS2 UCRT64** from the Start menu, not the plain MSYS2 shell.
+3. Update the package database and installed packages:
 
-```sh
+   ```bash
+   pacman -Syu
+   ```
+
+   If asked to close the terminal, reopen **MSYS2 UCRT64** and run `pacman -Syu` again until updates complete.
+
+4. Install GCC and check it:
+
+   ```bash
+   pacman -S --needed mingw-w64-ucrt-x86_64-gcc
+   gcc --version
+   ```
+
+**Build the game in MSYS2 UCRT64:**
+
+In the MSYS2 UCRT64 terminal, navigate to the extracted C11 project folder. For example, if the ZIP was extracted to your Windows Downloads folder:
+
+```bash
 cd /c/Users/YOUR_USERNAME/Downloads/xonitix-trick-or-treat
 ```
 
-Replace `YOUR_USERNAME` with your Windows account folder name. If you cloned the project or extracted it elsewhere, use that path instead.
+Replace `YOUR_USERNAME` and the folder location as needed. Compile the 2D game:
 
-Compile the 2D Halloween game:
-
-```sh
+```bash
 gcc -std=c11 -O2 -Wall -Wextra -Wpedantic main.c arena.c terminal.c -o xonitix.exe
 ```
 
-Optional: compile the preserved original one-line C game:
-
-```sh
-gcc -std=c11 -O2 -Wall -Wextra -Wpedantic classic.c game.c terminal.c -o xonitix-classic.exe
-```
-
-### 3. Play in Windows Terminal / PowerShell
-
-Open **Windows Terminal** with a **PowerShell** tab, then change to your extracted project folder:
+**Play in Windows Terminal or PowerShell**, from the same folder:
 
 ```powershell
 cd "$HOME\Downloads\xonitix-trick-or-treat"
 .\xonitix.exe
 ```
 
-For a quick demonstration of Ghost Mode and the ASCII warning:
+Test Ghost Mode and artwork quickly:
 
 ```powershell
-.\xonitix.exe --ghost-interval 3 --ghost-duration 5
+.\xonitix.exe -l 40 -r 12 --ghost-interval 4 --ghost-duration 3 --ascii-interval 2
 ```
 
-If your window is too small, enlarge it or run:
+**Optional Windows tests:** Run these in **MSYS2 UCRT64**, from the project folder:
 
-```powershell
-.\xonitix.exe -l 40 -r 12
-```
-
-See [Controls](#controls) for keyboard instructions and [Commands](#commands) for all options. **The `.exe` file is for Windows.** Linux and macOS users should build the non-`.exe` version with `make`.
-
-### 4. Optional: run automated tests
-
-In **MSYS2 UCRT64**, from the same source folder:
-
-```sh
+```bash
 gcc -std=c11 -O2 -Wall -Wextra -Wpedantic tests/test_arena.c arena.c -o test-arena.exe
 ./test-arena.exe
 
@@ -148,96 +215,97 @@ gcc -std=c11 -O2 -Wall -Wextra -Wpedantic tests/test_game.c game.c -o test-game.
 ./test-game.exe
 ```
 
-### Windows troubleshooting
-
-- **`gcc: command not found`**: Open **MSYS2 UCRT64**, not a regular PowerShell prompt, for the installation and compilation steps.
-- **`main.c: No such file or directory`**: You are in the wrong folder. Change into the directory containing `main.c`, `arena.c`, and `terminal.c`.
-- **`Unable to start game. Use an interactive terminal.`**: Launch the compiled executable in **Windows Terminal / PowerShell** instead of the MSYS2 MinTTY window, a redirected shell, or an editor's output pane.
-- **Board or Halloween art will not fit**: Maximize the terminal, reduce its font size, or try `-l 40 -r 12`. The ASCII ghost occupies extra columns to the right of the arena.
-- **PowerShell cannot find `xonitix.exe`**: Confirm that the executable was compiled in this folder and run it as `.\xonitix.exe`.
-
-**Windows verification status:** Windows-specific input and console handling are implemented in `terminal.c`, but this edition has not been runtime-tested on Windows. Linux compilation and game-engine tests have passed. Windows testing and bug reports are welcome.
+The provided Makefile uses Unix shell commands, so the documented Windows build uses GCC directly instead of `make`. Windows-specific console code is included but **has not been runtime-tested on Windows**.
 
 ## Controls
 
-| Key | Action |
+| Input | Action |
 | --- | --- |
-| Up, Down, Left, Right arrows | Move |
-| W, A, S, D | Also move |
-| Space | Arm drawing while on captured territory |
-| B | Toggle 2x left/right speed boost (does not affect up/down) |
+| Left / Right arrows, or A / D | Move horizontally |
+| Up / Down arrows, or W / S | Move vertically |
+| Space | Arm territory drawing while standing on `#` |
+| B | Toggle 2x left/right movement speed |
 | X | Stop moving |
 | Q | Quit |
 
-Direction continues until changed or stopped. You are safe while travelling inside claimed territory, except when Ghost Mode is active.
+Movement continues in the chosen direction until changed or stopped. Press Space on claimed territory, cross unclaimed space, and return to claimed territory to complete a capture. Touching your own unfinished trail or an enemy can end the game.
 
-## Commands
+## Command-line options
 
-```sh
-./xonitix                              # Default 2D Trick or Treat game
-./xonitix -l 40 -r 14                 # Custom board width and height
-./xonitix --ghost-interval 3          # Demo: first ghost after 3 seconds
-./xonitix --ghost-duration 10         # Ghost stays active for 10 seconds
-./xonitix --ascii-interval 3           # Random Halloween art every 3 seconds
-./xonitix --no-ascii                  # No ASCII artwork
-./xonitix --no-ghost                  # No ghost gameplay mechanic
-./xonitix -s                          # Clear board when exiting
-./xonitix -h                          # Help
-./xonitix-classic                     # Original single-line C port
-```
+On Linux and macOS, use `./xonitix`. On Windows PowerShell, replace this with `.\xonitix.exe`.
 
-The art appears to the right of the arena so it never obscures the game. A quick Halloween-art demo with gameplay Ghost Mode disabled is:
-
-```sh
-./xonitix -l 40 -r 12 --no-ghost --ascii-interval 2
-```
-
-The warning ghost still appears during actual Ghost Mode attacks when ghosts are enabled. If you want both visual surprises and ghosts during your demo:
-
-```sh
-./xonitix -l 40 -r 12 --ghost-interval 4 --ghost-duration 3 --ascii-interval 2
-```
-
- Give your terminal enough width: at least **24 extra columns** beyond your requested board width. The arena needs 3 rows beyond its height for its status and legend.
-
-## Complete command-line reference
-
-| Argument | Meaning | Allowed values |
+| Option | Effect | Values / default |
 | --- | --- | --- |
-| `-l N` | Width of the 2D board | 12 through 120 columns |
-| `-r N` | Height of the 2D board | 8 through 45 rows |
-| `--ghost-interval N` | Time between ghost attacks | 1 through 300 seconds; default 20 |
-| `--ghost-duration N` | How long ghost attacks last | 1 through 300 seconds; default 5 |
-| `--ascii-interval N` | Fixed time between random Halloween artwork | 1 through 300 seconds; defaults to random 10 through 17 |
-| `--no-ghost` | Turn off ghost attacks | Flag, no value |
-| `--no-ascii` | Hide decorative art and ghost warnings | Flag, no value |
-| `-s` | Clear the terminal on exit | Flag, no value |
-| `-h`, `--help` | Display game help | Flag, no value |
+| `-l N` | Arena width in columns | 12 to 120 |
+| `-r N` | Arena height in rows | 8 to 45 |
+| `--ghost-interval N` | Delay between ghost activations | 1 to 300 seconds; default 20 |
+| `--ghost-duration N` | Duration of active Ghost Mode | 1 to 300 seconds; default 5 |
+| `--ascii-interval N` | Fixed interval between harmless art popups | 1 to 300 seconds; default randomized |
+| `--no-ghost` | Disable dangerous Ghost Mode | Flag |
+| `--no-ascii` | Hide Halloween art and ghost warning artwork | Flag |
+| `-s` | Clear the game board on exit | Flag |
+| `-h`, `--help` | Print built-in help | Flag |
 
-**The classic executable has different options.** Use `./xonitix-classic -h`. Classic supports `-l N` (line length 2 through 4096), `-q` (quiet start), `-s` (stealth exit), and `-h` / `--help`. Classic controls: Left and Right to move, Down to stop, Space to claim, Q to quit.
+**Examples (Linux/macOS):**
 
-## Files
+```bash
+./xonitix                                              # Default gameplay
+./xonitix -l 60 -r 20                                 # Set width and height
+./xonitix --no-ghost --ascii-interval 2               # Harmless art demo
+./xonitix --ghost-interval 4 --ghost-duration 3       # Frequent ghost attacks
+./xonitix -l 40 -r 12 --ghost-interval 4 --ascii-interval 2
+./xonitix --no-ascii                                  # Game without popups
+```
 
-- `main.c`: 2D game runner, options, ASCII ghost artwork, and rendering.
-- `arena.c` and `arena.h`: 2D movement, territory filling, enemies, ghost timers, collisions.
-- `terminal.c` and `terminal.h`: non-blocking keyboard input, timing, terminal support.
-- `classic.c`, `game.c`, `game.h`: original one-line C port, built as `xonitix-classic`.
-- `tests/test_arena.c`, `tests/test_game.c`: automated 2D and classic game tests.
-- `Makefile`: builds both games and runs both test suites.
-- `LICENSE`: original MIT license and attribution.
+## Original one-line mode
 
-## Verification
+The classic C port is still available. On Linux/macOS, `make` also builds `xonitix-classic`:
 
-Both games compile with `-std=c11 -Wall -Wextra -Wpedantic -Werror`. The 2D engine's tests cover horizontal boost including intermediate collisions and captures, flood fill, territory capture, wall phasing, ghost activation and timeout, timed ASCII-art selection, configurable ambient intervals, trail collisions, fatal ghost contact, and option behavior. An actual Linux pseudo-terminal smoke test confirmed that timed ghost activation and ASCII warnings appear while rendering continues and the quit key works.
+```bash
+./xonitix-classic
+./xonitix-classic -h
+```
 
-## Hacktoberfest contribution guidance
+On Windows, compile it using MSYS2 UCRT64:
 
-**Treat:** 2D territory-capture game using arrays and flood fill, plus toggleable horizontal speed boost.
+```bash
+gcc -std=c11 -O2 -Wall -Wextra -Wpedantic classic.c game.c terminal.c -o xonitix-classic.exe
+```
 
-**Trick:** Periodic wall-phasing ghost, with a nonblocking warning and five kinds of randomized decorative ASCII popups.
+Then run `xonitix-classic.exe` from PowerShell. Classic supports `-l N`, `-q`, `-s`, and `-h`, but **does not include** the 2D arena, Ghost Mode, horizontal boost, or rotating ASCII art.
 
-If submitting a pull request to an upstream GitHub project, check its contribution policy and scope first. The feature code is contained in `arena.c`, `arena.h`, and `main.c`, making it practical to review the gameplay changes separately from the preserved classic mode.
+## Troubleshooting
+
+- **`undefined reference to arena_init` or similar errors:** Your build is using the old source list (`main.c game.c terminal.c`). Use this project's Makefile, which links `main.c arena.c terminal.c`, and run `make clean && make`.
+- **`No such file or directory` for `arena.c`:** Make sure you extracted the complete Spooky ASCII edition and are in the directory with `arena.c` and `Makefile`.
+- **`Clock skew detected` on Linux/macOS:** Files may have future timestamps after extraction. Run `touch Makefile *.c *.h tests/*.c`, then `make clean && make`.
+- **Terminal too small or artwork clipped:** Maximize the terminal, reduce font size, or try `./xonitix -l 40 -r 12`. The art needs extra columns on the right.
+- **`Unable to start game. Use an interactive terminal`:** Run the game inside a normal interactive terminal, not a redirected shell or IDE output panel. On Windows, use Windows Terminal or PowerShell rather than the MSYS2 MinTTY window.
+- **`gcc: command not found` on Windows:** Open MSYS2 UCRT64, install `mingw-w64-ucrt-x86_64-gcc`, and build there.
+- **PowerShell does not launch `xonitix.exe`:** Use `.\xonitix.exe` from the directory containing the compiled file.
+- **Terminal display does not recover after an unexpected interruption (Linux/macOS):** Try `stty sane` followed by `printf '\033[?25h'`.
+
+## Project files
+
+| File | Purpose |
+| --- | --- |
+| `main.c` | Main 2D loop, options, rendering, Halloween art |
+| `arena.c`, `arena.h` | Arena state, capture logic, movement, boost, ghost logic |
+| `terminal.c`, `terminal.h` | Input, screen measurements, clock, platform support |
+| `classic.c`, `game.c`, `game.h` | Original single-line game port |
+| `tests/test_arena.c`, `tests/test_game.c` | Automated game-engine tests |
+| `Makefile` | Builds the two games and their tests on Unix-like platforms |
+| `LICENSE` | MIT license and attribution |
+
+## Testing and platform status
+
+The C11 project has been compiled and tested on **Linux**. Both automated test suites pass. The macOS build instructions use Apple's standard Clang toolchain, but macOS gameplay is **not yet verified**. Windows console handling is implemented, but the Windows build and gameplay are **not yet verified on Windows**. Testing contributions are welcome.
+
+## Hacktoberfest Trick or Treat contribution
+
+- **Trick:** Timed wall-phasing ghost, ghost warning, and five randomized ASCII Halloween decorations.
+- **Treat:** Fully playable 2D territory-capture mode using breadth-first flood fill, plus optional horizontal speed boost.
 
 ## License
 
-MIT License. Original game Copyright (c) 2018 Breno G. de Oliveira. See `LICENSE`.
+MIT License. Original Xonitix copyright (c) 2018 Breno G. de Oliveira. See [`LICENSE`](LICENSE).

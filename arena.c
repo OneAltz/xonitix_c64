@@ -1,7 +1,6 @@
 /* Xonitix Halloween: 2D territory capture and periodic Ghost Mode.
  * Based on Xonitix by Breno G. de Oliveira (2018), MIT. */
 #include "arena.h"
-
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
